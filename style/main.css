@@ -1,0 +1,36 @@
+/* style/main.css */
+
+/* Change the background color of the main content area */
+div.st-main {
+    background-color: #181a24;
+}
+
+/* Style the st.metric containers */
+div[data-testid="stMetric"] {
+    background-color: #0d3fff;
+    border: 1px solid #262730;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+/* Style the metric label */
+div[data-testid="stMetricLabel"] {
+    font-size: 16px;
+    color: #a9a9a9;
+}
+
+/* Style the radio buttons to look more like modern tabs */
+div[data-testid="stRadio"] > label {
+    background-color: #262730;
+    border-radius: 8px;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+
+div[data-testid="stExpanderDetails"] .stMarkdown {
+    background-color: #ffffff; /* White background */
+    color: #000000;           /* Black text */
+    padding: 1rem;             /* Add some internal spacing */
+    border-radius: 0.5rem;     /* Slightly rounded corners */
+}
