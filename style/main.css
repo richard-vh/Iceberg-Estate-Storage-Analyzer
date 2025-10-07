@@ -34,3 +34,106 @@ div[data-testid="stExpanderDetails"] .stMarkdown {
     padding: 1rem;             /* Add some internal spacing */
     border-radius: 0.5rem;     /* Slightly rounded corners */
 }
+
+/* Configuration tab display on right side of page */
+button[id="tabs-bui4-tab-5"] {
+    margin-left: auto;   
+}
+
+
+/* KPI metrics colour changes */
+div[data-testid="stColumn"]:nth-child(n + 3):nth-child(-n + 4) div[data-testid="stMetric"] {
+  background-color: #FF550D;
+}
+
+
+div[data-testid="stColumn"]:nth-child(n + 5):nth-child(-n + 7) div[data-testid="stMetric"] {
+  background-color: #CEDBE4;
+}
+
+div[data-testid="stColumn"]:nth-child(n + 5):nth-child(-n + 7) div[data-testid="stMarkdownContainer"] {
+  color: black;
+}
+
+div[data-testid="stColumn"]:nth-child(n + 5):nth-child(-n + 7) div[data-testid="stMetricValue"] {
+  color: black;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Adjust gap as needed */
+}
+
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 0rem;
+    padding-left: 5rem;
+    padding-right: 5rem;
+}
+
+/* main.css */
+
+/* --- THIS IS THE CRUCIAL FIX --- */
+/* Target the st.radio widget's main parent container using the key we assigned,
+   and force it to be full-width, overriding Streamlit's "fit-content".
+*/
+div[data-testid="stElementContainer"][class*="st-key-active_tab"] {
+    width: 100% !important;
+}
+
+
+/* --- The rest of the tab styling --- */
+
+/* This is the container for the row of tabs */
+div.st-key-active_tab div[data-testid="stRadio"] > div[role="radiogroup"] {
+    display: flex;
+    width: 100%;
+    border-bottom: 2px solid #333c4d;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+/* Style each individual tab's clickable area (the label) */
+div.st-key-active_tab div[data-testid="stRadio"] label {
+    margin: 0;
+    padding: 14px 16px;
+    color: #adb5bd;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Style for when you hover over a tab */
+div.st-key-active_tab div[data-testid="stRadio"] label:hover {
+    color: #ffffff;
+    border-bottom: 3px solid #6c757d;
+}
+
+/* Hide the custom div that Streamlit draws as the radio circle */
+
+div.st-key-active_tab div[data-testid="stRadio"] label > div:first-child {
+    display: none;
+}
+
+/* Also hide the actual (but invisible) radio input button */
+div.st-key-active_tab div[data-testid="stRadio"] input[type="radio"] {
+    display: none;
+}
+
+/* Bolds the text of the currently SELECTED tab */
+div.st-key-active_tab div[data-testid="stRadio"] input:checked + div {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Adds the highlight border to the label of the SELECTED tab */
+div.st-key-active_tab div[data-testid="stRadio"] label:has(input:checked) {
+    border-bottom: 3px solid #6c5ce7;
+}
+
+/* Pushes the last tab ("Configuration") to the far right */
+div.st-key-active_tab div[data-testid="stRadio"] > div label:last-child {
+    margin-left: auto;
+}

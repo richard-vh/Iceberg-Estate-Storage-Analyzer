@@ -48,26 +48,6 @@ def create_top_tables_bar_chart(df, ranking_option):
         )
     return fig
 
-#def create_db_composition_treemap(df):
-#    """Creates a nested treemap showing data and metadata composition by database."""
-#    agg_df = df.groupby('db_name')[['data_folder_size', 'metadata_folder_size']].sum().reset_index()
-#    plot_df = agg_df.melt(id_vars='db_name', var_name='Component', value_name='Size')
-#    plot_df['Component'] = plot_df['Component'].map({
-#        'data_folder_size': 'Data', 'metadata_folder_size': 'Metadata'
-#    })
-#
-#    fig = px.treemap(
-#        plot_df, path=[px.Constant("All Databases"), 'db_name', 'Component'],
-#        values='Size', color='Component',
-#        color_discrete_map={'Data': '#5555F9', 'Metadata': '#FF550D', '(?)': '#FFFFFF'}
-#    )
-#    fig.update_traces(
-#        hovertemplate="<b>%{label}</b><br>Size: %{customdata[0]}<extra></extra>",
-#        customdata=plot_df['Size'].apply(format_bytes).rename('Formatted Size'),
-#        textfont_color='black', tiling_pad=0
-#    )
-#    fig.update_layout(height=700, margin=dict(t=50))
-#    return fig
 
 def create_db_composition_treemap(df):
     """Creates a nested treemap showing data and metadata composition by database."""
@@ -100,56 +80,6 @@ def create_db_composition_treemap(df):
     fig.update_layout(height=700, margin=dict(t=50))
     return fig
 
-#def create_snapshot_scatter_plot(df):
-#    """Creates a scatter plot of snapshot count vs. metadata size."""
-#    scatter_df = df.copy()
-#    scatter_df['metadata_size_mb'] = scatter_df['metadata_folder_size'] / (1024**2)
-#    
-#    fig = px.scatter(
-#        scatter_df, x='snapshot_file_count', y='metadata_size_mb',
-#        color='db_name', size='data_folder_size', hover_name='full_table_name',
-#        hover_data={'db_name': True, 'metadata_size_mb': ':.2f', 'snapshot_file_count': True, 'data_folder_size': False},
-#        labels={
-#            "snapshot_file_count": "Number of Snapshot Files",
-#            "metadata_size_mb": "Metadata Size (MB)",
-#            "db_name": "Database", "data_folder_size": "Data Size"
-#        },
-#        title="Metadata Size vs. Number of Snapshot Files"
-#    )
-#    fig.update_layout(legend_title_text='Database')
-#    fig.update_traces(
-#        hovertemplate="<b>%{hovertext}</b><br><br>" +
-#                      "Database: %{customdata[0]}<br>" +
-#                      "Snapshot File Count: %{x}<br>" +
-#                      "Metadata Size: %{y:.2f} MB<extra></extra>"
-#    )
-#    return fig
-
-  
-#def create_small_files_bar_chart(df, threshold):
-#    """Creates a bar chart of the top 20 tables with the smallest average file sizes."""
-#    small_files_df = df[df['avg_file_size_mb'] < threshold].copy()
-#    
-#    print(small_files_df)
-#    
-#    # Sort by the average file size to find the worst offenders
-#    top_20_small_files = small_files_df.nsmallest(20, 'avg_file_size_mb')
-#
-#    if top_20_small_files.empty:
-#        fig = go.Figure()
-#        fig.add_annotation(text="No tables found below the small file threshold.", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-#        return fig
-#
-#    fig = px.bar(
-#        top_20_small_files,
-#        x='avg_file_size_mb',
-#        y='full_table_name',
-#        orientation='h',
-#        title=f"Top 20 Tables with Average File Size < {threshold} MB",
-#        labels={'avg_file_size_mb': 'Average File Size (MB)', 'full_table_name': 'Table Name'}
-#    )
-#    fig.update_layout(yaxis={'categoryorder':'total ascending'})
-#    return fig
 
 def create_small_files_scatter_plot(df, threshold):
     """Creates an impact scatter plot to identify high-priority tables for compaction."""
@@ -169,6 +99,8 @@ def create_small_files_scatter_plot(df, threshold):
         hover_name='full_table_name',
         log_y=True, # Logarithmic scale is key to handling wide range of file counts
         title="Compaction Impact Analysis",
+        subtitle="*Tables in the top-left quadrant are the highest priority for compaction.",
+        height=600,
         labels={
             'avg_file_size_mb': 'Average File Size (MB)',
             'data_folder_count': 'Number of Data Files (Log Scale)',
@@ -205,7 +137,10 @@ def create_hotspot_treemap(df):
         color_continuous_scale='RdYlGn', # Red->Yellow->Green scale; smaller is redder
         color_continuous_midpoint=color_range_max / 2,
         hover_name='full_table_name',
-        custom_data=['avg_file_size_mb', 'data_folder_count']
+        custom_data=['avg_file_size_mb', 'data_folder_count'],
+        title="Small File Hotspot Analysis",
+        subtitle="*Large, red rectangles represent tables with many small files.",
+        height=600,
     )
 
     fig.update_traces(
@@ -215,7 +150,7 @@ def create_hotspot_treemap(df):
     )
 
     fig.update_layout(
-        title="Small File Hotspot Analysis",
+#        title="Small File Hotspot Analysis",
         coloraxis_colorbar=dict(
             title="Avg. File Size (MB)"
         )
@@ -241,7 +176,8 @@ def create_snapshot_scatter_plot(df, x_axis, y_axis):
             "db_name": "Database", 
             "data_folder_size": "Data Size"
         },
-        title=f"{format_label(y_axis)} vs. {format_label(x_axis)}"
+        title=f"{format_label(y_axis)} vs. {format_label(x_axis)}",
+      height=600,
     )
     fig.update_layout(legend_title_text='Database')
     
