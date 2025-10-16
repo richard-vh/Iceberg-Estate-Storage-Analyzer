@@ -15,7 +15,7 @@ An interactive Streamlit dashboard designed to explore and analyze the storage m
     -   **Storage Analysis**:Top 20 tables by storage size and databases composition (Data vs. Metadata) visualizations.
     -   **Small Files Analysis**: Iceberg table small files visualization
     -   **Metric Relationship Explorer**: Visualize Iceberg table metrics against each other.
-    -   *Raw Data View**: Table with raw view ofIceberg metrics - view, filter, sort.
+    -   **Raw Data View**: Table with raw view ofIceberg metrics - view, filter, sort.
     -   **AI Analysis**: Use your choice of LLM to analyze Iceberg metric context and make suggestions.
 -   **Custom Styling**: A clean, modern UI with a custom stylesheet.
 
