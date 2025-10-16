@@ -10,7 +10,7 @@ An interactive Streamlit dashboard designed to explore and analyze the storage m
 ## Key Features
 
 -   **Summary KPIs**: View high-level Iceberg metrics at a glance, including total tables, total storage size, and file counts.
--   **Database filter: Focus in on individual or specific groups of databases.
+-   **Database filter**: Focus in on individual or specific groups of databases.
 -   **Interactive Visualizations**:
     -   **Storage Analysis**:Top 20 tables by storage size and databases composition (Data vs. Metadata) visualizations.
     -   **Small Files Analysis**: Iceberg table small files visualization
