@@ -1,3 +1,5 @@
+# code/app.py
+
 import streamlit as st
 import pandas as pd
 import data
@@ -69,11 +71,10 @@ def clear_ai_analysis():
 if 'llm_prompt' not in st.session_state:
     st.session_state.llm_prompt = analysis.DEFAULT_PROMPT
 if 'llm_endpoint' not in st.session_state:
-    st.session_state.llm_endpoint = "https://api.openai.com/v1/chat/completions"
-if 'llm_api_key' not in st.session_state:
+    st.session_state.llm_endpoint = utils.get_default_llm_endpoint()
     st.session_state.llm_api_key = ""
 if 'llm_model_name' not in st.session_state:
-    st.session_state.llm_model_name = "gpt-4o-mini"
+    st.session_state.llm_model_name = utils.get_default_llm()
 
 # --- Data Loading and Processing ---
 schema_name, table_name = ui.display_sidebar_inputs(clear_callback=clear_ai_analysis)
@@ -147,18 +148,6 @@ if st.session_state.active_tab == "Storage Analysis":
         st.plotly_chart(fig_treemap, use_container_width=True)
 
 elif st.session_state.active_tab == "Small Files Analysis":
-#    slider_col, _, _ = st.columns(3)
-#    with slider_col:
-#        small_file_threshold = st.slider(
-#            "Set the Small File Threshold (MB) for Analysis:",
-#            min_value=1,
-#            max_value=256,
-#            value=128,
-#            key="small_file_slider_tab"
-#        )
-#
-#    ui.display_small_file_kpis(filtered_df, small_file_threshold)
-#    st.markdown("---")
 
     col1, col2, _ = st.columns(3)
     with col2:
@@ -219,14 +208,29 @@ elif st.session_state.active_tab == "AI Analysis":
     column_spec = [1, 1.5, 2, 4]  # Adjusted column spec for radio button
     cols = st.columns(column_spec, vertical_alignment="bottom")
 
+    caii_domain = utils.get_caii_domain()
+    is_caii_available = bool(caii_domain)
+    default_model = utils.get_default_llm()
+    is_default_available = bool(default_model)
 
     with cols[0]:
         model_choice = st.radio(
             "Select Model Source", # This label is hidden but good for context
             options=["Default", "Use CAAI Model"],
             horizontal=True,
-            label_visibility="collapsed" # Hides the label for a cleaner UI
+            label_visibility="collapsed", # Hides the label for a cleaner UI
+            disabled=(not is_caii_available)
         )
+        
+    if not is_default_available:
+        st.caption("'Default' is unavailable because a default model is not configured in the project settings.")
+        
+    if not is_caii_available:
+        st.caption("'Use CAAI Model' is unavailable because a CAAI domain is not configured in the project settings.")
+        # Since the widget is disabled, its state is fixed to the first option.
+        # We explicitly set model_choice here to ensure any downstream logic
+        # correctly uses "Default".
+        model_choice = "Default"
     
     # This boolean flag is now derived from the radio button's selection
     use_caai = (model_choice == "Use CAAI Model")
@@ -260,11 +264,12 @@ elif st.session_state.active_tab == "AI Analysis":
     # --- Analyze Button and Logic ---
     col1, col2, _ = st.columns([1,1,6], gap="small")
     with col1:
-        analyze_button = st.button("Analyze Current Metrics")
+        analyze_button = st.button("Analyze Current Metrics", disabled=not is_default_available)
 
     with col2:
         # Display the model that will be used
-        st.markdown(f"<div style='padding-top: 5px;'>Using model: <strong>{model_to_use}</strong></div>", unsafe_allow_html=True)
+        if is_default_available:
+            st.markdown(f"<div style='padding-top: 5px;'>Using model: <strong>{model_to_use}</strong></div>", unsafe_allow_html=True)
 
     if analyze_button:
         # Use the correct API key based on the selection
@@ -308,16 +313,21 @@ elif st.session_state.active_tab == "AI Analysis":
 
 elif st.session_state.active_tab == "⚙️ LLM Configuration":
     st.subheader("Default LLM Configuration")
-    st.info("This is the default LLM configuration from the Project Enviornment Variables.")
 
-    st.session_state.llm_model_name = st.text_input(
+    st.session_state.llm_model_name = utils.get_default_llm() or "A default model has not been configured in the project settings."
+
+    st.text_input(
         "Model Name",
-        value = utils.get_default_llm()
+        value=st.session_state.llm_model_name,
+        disabled=True
     )
     
-    st.session_state.llm_endpoint = st.text_input(
+    st.session_state.llm_endpoint = utils.get_default_llm_endpoint() or "A default model endpoint has not been configured in the project settings."
+    
+    st.text_input(
         "Model API Endpoint",
-        value = utils.get_default_llm_endpoint()
+        value = st.session_state.llm_endpoint,
+        disabled=True
     )
 
 

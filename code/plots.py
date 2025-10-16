@@ -105,7 +105,18 @@ def create_small_files_scatter_plot(df, threshold):
             'avg_file_size_mb': 'Average File Size (MB)',
             'data_folder_count': 'Number of Data Files (Log Scale)',
             'data_folder_size': 'Total Data Size'
-        }
+        },
+        custom_data=['avg_file_size_mb', 'data_folder_count','data_folder_size_readable']
+    )
+    
+    fig.update_traces(
+        hovertemplate="<br>".join([
+            "<b>%{hovertext}</b>",
+            "Average File Size (MB): %{x:.3f} MB",
+            "Number of Data Files: %{y:.0f}",
+            "Total Data Size: %{customdata[2]}",  # <-- This displays your readable string
+            "<extra></extra>"
+        ])
     )
 
     # Add a vertical line for the small file threshold
@@ -137,16 +148,20 @@ def create_hotspot_treemap(df):
         color_continuous_scale='RdYlGn', # Red->Yellow->Green scale; smaller is redder
         color_continuous_midpoint=color_range_max / 2,
         hover_name='full_table_name',
-        custom_data=['avg_file_size_mb', 'data_folder_count'],
+        custom_data=['avg_file_size_mb', 'data_folder_count','data_folder_size_readable'],
         title="Small File Hotspot Analysis",
         subtitle="*Large, red rectangles represent tables with many small files.",
         height=600,
     )
 
     fig.update_traces(
-        hovertemplate="<b>%{label}</b><br><br>" +
-                      "Avg. File Size: %{customdata[0]:.2f} MB<br>" +
-                      "File Count: %{customdata[1]:,}<extra></extra>"
+        hovertemplate="<br>".join([
+            "<b>%{hovertext}</b>",
+            "Average File Size (MB): %{customdata[0]:.3f} MB",
+            "Number of Data Files: %{customdata[1]}",
+            "Total Data Size: %{customdata[2]}",  # <-- This displays your readable string
+            "<extra></extra>"
+        ])
     )
 
     fig.update_layout(

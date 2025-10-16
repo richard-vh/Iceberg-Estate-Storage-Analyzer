@@ -28,7 +28,7 @@ def format_bytes(size_bytes):
 def get_caai_models():
     """Fetches the list of CAAI model endpoints and returns a dictionary."""
     try:
-        domain = os.environ["CAII_DOMAIN"]
+        domain = get_caii_domain()
         url = f'https://{domain}/api/v1alpha1/listEndpoints'
         
         # Safely read the JWT token
@@ -70,21 +70,56 @@ def get_caai_models():
 def get_default_llm():
     try:
         model_to_use = os.environ["DEFAULT_AI_MODEL"] 
-        
         return model_to_use
     except KeyError as e:
-        # --- 2. Catch the specific error if a key is not found ---
-        # The 'e' variable helpfully contains the name of the missing key.
-        st.error(f"Required environment variable {e} is not set.")
-        
+#        st.error(f"Required environment variable {e} is not set.")
+        return {}
         
 def get_default_llm_endpoint():
     try:
         endpoint_to_use = os.environ["DEFAULT_AI_ENDPOINT_URL"] 
-        
         return endpoint_to_use
     except KeyError as e:
-        # --- 2. Catch the specific error if a key is not found ---
-        # The 'e' variable helpfully contains the name of the missing key.
+#        st.error(f"Required environment variable {e} is not set.")
+        return {}
+      
+def get_default_ai_api_key():
+    try:
+        endpoint_to_use = os.environ["DEFAULT_AI_API_KEY"] 
+        return endpoint_to_use
+    except KeyError as e:
+#        st.error(f"Required environment variable {e} is not set.")
+        return {}
+      
+def get_caii_domain():
+    try:
+        endpoint_to_use = os.environ["CAII_DOMAIN"] 
+        return endpoint_to_use
+    except KeyError as e:
+#        st.error(f"Required environment variable {e} is not set.")
+        return {}
+      
+def get_impala_conn():
+    try:
+        endpoint_to_use = os.environ["IMPALA_CONNECTION_NAME"] 
+        return endpoint_to_use
+    except KeyError as e:
         st.error(f"Required environment variable {e} is not set.")
         return {}
+      
+def get_table_database():
+    try:
+        endpoint_to_use = os.environ["SOURCE_TABLE_DATABASE"] 
+        return endpoint_to_use
+    except KeyError as e:
+        st.error(f"Required environment variable {e} is not set.")
+        return {}
+      
+def get_table_name():
+    try:
+        endpoint_to_use = os.environ["SOURCE_TABLE_NAME"] 
+        return endpoint_to_use
+    except KeyError as e:
+        st.error(f"Required environment variable {e} is not set.")
+        return {}
+      

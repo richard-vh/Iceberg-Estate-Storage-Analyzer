@@ -3,8 +3,9 @@
 import streamlit as st
 import pandas as pd
 import cml.data_v1 as cmldata
+import utils
 
-CONNECTION_NAME = "default-impala-aws"
+
 
 @st.cache_data(ttl=600)  # Cache data for 10 minutes
 def load_data(schema, table):
@@ -14,12 +15,13 @@ def load_data(schema, table):
     """
     conn = None
     try:
+        CONNECTION_NAME = utils.get_impala_conn()
         conn = cmldata.get_connection(CONNECTION_NAME)
         sql_query = f"SELECT * FROM {schema}.{table}"
         df = conn.get_pandas_dataframe(sql_query)
         return df
     except Exception as e:
-        st.error(f"Failed to connect or query the data source: {e}")
+        st.error(f"Failed to connect or query the data source {schema}.{table}: {e}")
         return pd.DataFrame()  # Return empty dataframe on error
     finally:
         if conn:

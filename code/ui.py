@@ -2,7 +2,7 @@
 
 import streamlit as st
 import pandas as pd
-from utils import img_to_bytes, format_bytes
+import utils
 
 def load_css(file_path):
     """Loads a CSS file and injects it into the Streamlit app."""
@@ -12,7 +12,7 @@ def load_css(file_path):
 def display_custom_title():
     """Displays the custom HTML title with an image."""
     img_path = "images/iceberg.png"
-    img_base64 = img_to_bytes(img_path)
+    img_base64 = utils.img_to_bytes(img_path)
     title_html = f"""
     <div class="title-container">
         <img src="data:image/png;base64,{img_base64}" width="65">
@@ -31,13 +31,21 @@ def calculate_average_file_size(df):
         lambda row: (row['data_folder_size'] / row['data_folder_count'] / (1024**2)) if row['data_folder_count'] > 0 else 0,
         axis=1
     )
+    df['data_folder_size_readable'] = df.apply(
+        lambda row: (utils.format_bytes(row['data_folder_size'])) if row['data_folder_size'] > 0 else 0,
+        axis=1
+    )
+    df['metadata_folder_size_readable'] = df.apply(
+        lambda row: (utils.format_bytes(row['metadata_folder_size'])) if row['metadata_folder_size'] > 0 else 0,
+        axis=1
+    )
     return df
 
 def display_sidebar_inputs(clear_callback):
     """Displays the sidebar widgets for data source input."""
     st.sidebar.header("Data Source")
-    schema_name = st.sidebar.text_input("Schema Name", "rvanheerden", on_change=clear_callback)
-    table_name = st.sidebar.text_input("Table Name", "iceberg_analyzer_results", on_change=clear_callback)
+    schema_name = st.sidebar.text_input("Schema Name", utils.get_table_database(), on_change=clear_callback)
+    table_name = st.sidebar.text_input("Table Name", utils.get_table_name(), on_change=clear_callback)
     st.sidebar.markdown("---")
     return schema_name, table_name
 
@@ -93,22 +101,22 @@ def display_kpis(df):
         st.metric("Total Tables", f"{total_tables:,}")
     with col2:
         st.metric("All Files Count", f"{int(total_files):,}")
-        st.metric("All Files Size", format_bytes(total_storage))
+        st.metric("All Files Size", utils.format_bytes(total_storage))
     with col3:
         st.metric("Data Files Count", f"{int(total_data_files):,}")
-        st.metric("Data Files Size", format_bytes(total_data_size))
+        st.metric("Data Files Size", utils.format_bytes(total_data_size))
     with col4:
         st.metric("Metadata Files Count", f"{int(total_metadata_files):,}")
-        st.metric("Metadata Files Size", format_bytes(total_metadata_size))
+        st.metric("Metadata Files Size", utils.format_bytes(total_metadata_size))
     with col5:
         st.metric("Metadata .json Count", f"{int(total_json_files):,}")
-        st.metric("Metadata .json Size", format_bytes(total_json_size))
+        st.metric("Metadata .json Size", utils.format_bytes(total_json_size))
     with col6:
         st.metric("Snapshot .avro Count", f"{int(total_snapshot_files):,}")
-        st.metric("Snapshot .avro Size", format_bytes(total_snapshot_size))  
+        st.metric("Snapshot .avro Size", utils.format_bytes(total_snapshot_size))  
     with col7:
         st.metric("Manifest .avro Count", f"{int(total_manifest_files):,}")
-        st.metric("Manifest .avro Size", format_bytes(total_manifest_size))
+        st.metric("Manifest .avro Size", utils.format_bytes(total_manifest_size))
 
 def display_small_file_kpis(df, small_file_threshold):
     """Calculates and displays KPIs specifically for small files analysis."""
