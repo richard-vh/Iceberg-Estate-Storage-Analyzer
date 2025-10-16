@@ -1,8 +1,5 @@
-#
-# main.py
-#
-# Improved by Gemini (Final version for full compatibility)
-#
+# iceberg_analytics_erxtract/iceberg_extract_analytics.py
+
 import os
 import time
 from pyspark.sql import SparkSession
@@ -14,9 +11,12 @@ import cml.data_v1 as cmldata
 
 # --- Constants for SQL Queries and Configuration ---
 
-HIVE_CONNECTION_NAME = "default-hive-aws"
-SPARK_CONNECTION_NAME = "go01-aw-dl"
-RESULTS_TABLE = "rvanheerden.iceberg_analyzer_results3"
+# Hive is required to get a list of Iceberg tables
+HIVE_CONNECTION_NAME = "<specify_your_hive_connection_name>" 
+# Spark is used for processing the metrics for the Iceberg tables
+SPARK_CONNECTION_NAME = "<specify_your_spark_connection_name>"
+# This will be the table where the analysis data is stored. Use this table as the source table for the Streamlit app (configured in CAI Project setting - see README.md)
+RESULTS_TABLE = "<specify_your_db.tablename>"
 
 # Query to find all Iceberg tables. This will be run via the Hive cursor.
 ICEBERG_TABLES_QUERY = """
