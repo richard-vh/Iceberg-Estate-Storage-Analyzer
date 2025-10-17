@@ -201,7 +201,7 @@ elif st.session_state.active_tab == "Raw Data View":
 
 
 elif st.session_state.active_tab == "AI Analysis":
- 
+    st.text("*Note: LLM's have differing capabilities and are known to hallunicate. Check output carefully and adjust prompt to suit model.")
     if 'ai_analysis' not in st.session_state:
         st.session_state.ai_analysis = None
 
@@ -286,17 +286,19 @@ elif st.session_state.active_tab == "AI Analysis":
             metrics = {
                 "Total Iceberg Tables": filtered_df.shape[0],
                 "All Files Count": filtered_df['data_folder_count'].sum() + filtered_df['metadata_folder_count'].sum(),
-                "All Files Size (TB)": (filtered_df['data_folder_size'].sum() + filtered_df['metadata_folder_size'].sum()) / (1024**4),
+                "All Files Size Bytes": str(filtered_df['data_folder_size'].sum() + filtered_df['metadata_folder_size'].sum()) + " bytes",
                 "Data Files Count": filtered_df['data_folder_count'].sum(),
-                "Data Files Size (TB)": filtered_df['data_folder_size'].sum() / (1024**4),
+                "Data Files Size Bytes": str(filtered_df['data_folder_size'].sum()) + " bytes",
+                "Average Data File Size": str(filtered_df['data_folder_size'].sum() / filtered_df['data_folder_count'].sum())  + " bytes",
                 "Metadata Files Count": filtered_df['metadata_folder_count'].sum(),
-                "Metadata Files Size (TB)": filtered_df['metadata_folder_size'].sum() / (1024**4),
+                "Metadata Files Size Bytes": str(filtered_df['metadata_folder_size'].sum()) + " bytes",
+                "Metadata to Data Ratio": f"{(filtered_df['metadata_folder_size'].sum() / filtered_df['data_folder_size'].sum()) * 100:.2f} %",
                 "Metadata Files (.json) Count": filtered_df['metadata_file_count'].sum(),
-                "Metadata Files (.json) Size (TB)": filtered_df['metadata_file_size'].sum() / (1024**4),
+                "Metadata Files (.json) Size Bytes": str(filtered_df['metadata_file_size'].sum())  + " bytes",
                 "Snapshot Files (.avro) Count": filtered_df['snapshot_file_count'].sum(),
-                "Snapshot Files (.avro) Size (GB)": filtered_df['snapshot_file_size'].sum() / (1024**3),
+                "Snapshot Files (.avro) Size Bytes": str(filtered_df['snapshot_file_size'].sum())  + " bytes",
                 "Manifest Files (.avro) Count": filtered_df['manifest_file_count'].sum(),
-                "Manifest Files (.avro) Size (GB)": filtered_df['manifest_file_size'].sum() / (1024**3),
+                "Manifest Files (.avro) Size Bytes": str(filtered_df['manifest_file_size'].sum())  + " bytes",
             }
             with st.spinner("Analyzing your Iceberg estate..."):
                 st.session_state.ai_analysis = analysis.get_iceberg_analysis(
