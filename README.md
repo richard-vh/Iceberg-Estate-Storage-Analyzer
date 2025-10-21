@@ -4,6 +4,9 @@ An interactive Streamlit dashboard designed to explore and analyze the storage m
 
 ![alt text](/images/readme_imageapp.png)
 
+![alt text](/images/readme_imageapp2.png)
+
+![alt text](/images/readme_imageapp3.png)
 
 ---
 
