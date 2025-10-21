@@ -1,6 +1,6 @@
 # ![](/images/iceberg_small.png) Iceberg Estate Storage Analyzer
 
-An interactive Streamlit dashboard designed to explore and analyze the storage metrics of Apache Iceberg tables. This tool provides visualizations to help you understand storage composition, identify large tables, and analyze metadata overhead and small files issues.
+An interactive Streamlit dashboard designed to explore and analyze the storage metrics of Cloudera Apache Iceberg tables. This tool provides visualizations to help you understand storage composition, identify large tables, and analyze metadata overhead and small files issues.
 
 ![alt text](/images/readme_imageapp.png)
 
@@ -54,6 +54,7 @@ Follow these steps to get the application running on your local machine.
 
 ### Prerequisites
 
+-   Cloudera AI project
 -   Python 3.8+
 -   Access to the Impala data source where the table metrics are stored.
 -   Run the iceberg_extract_analytics.py process first. The target table that the data is written to by this process is used as the source table by this Streamlit application below. 
