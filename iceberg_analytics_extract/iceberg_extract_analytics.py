@@ -69,10 +69,7 @@ def get_iceberg_tables(spark: SparkSession):
 
 
 def analyze_and_insert(spark: SparkSession):
-    """
-    Finds, analyzes, and inserts stats using a robust, hybrid approach.
-    It pre-validates paths on the driver before launching a single Spark job.
-    """
+
     print("🚀 Starting Iceberg table analysis with robust hybrid method...")
     sc = spark.sparkContext
 
@@ -83,7 +80,7 @@ def analyze_and_insert(spark: SparkSession):
 
     analysis_start_time = time.time()
 
-    print(f"📊 Analyzing {table_count} tables sequentially on the driver (fast metadata lookup)...")
+    print(f"📊 Analyzing {table_count} tables sequentially on the driver (metadata lookup)...")
     all_results = []
     # Get the Hadoop FileSystem object on the driver
     conf = sc._jsc.hadoopConfiguration()
@@ -91,7 +88,6 @@ def analyze_and_insert(spark: SparkSession):
     Path = sc._jvm.org.apache.hadoop.fs.Path
     FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
 
-#    for i, table_row in enumerate(tables_to_analyze_pandas_df.itertuples()):
     for i, table_row in tables_to_analyze_pandas_df.iterrows():
         base_path = table_row.metadata_path
         print(f"  [{i+1}/{table_count}] Processing: {table_row.db_name}.{table_row.tbl_name}")
