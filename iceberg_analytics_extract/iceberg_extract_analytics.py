@@ -1,44 +1,26 @@
-# iceberg_analytics_erxtract/iceberg_extract_analytics.py
+# iceberg_analytics_extract/iceberg_extract_analytics.py
 
 import os
 import time
 from pyspark.sql import SparkSession
-from pyspark import SparkContext
+from pyspark import SparkConf, SparkContext
 from pyspark.sql.functions import udf, col
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 from pyspark.sql.utils import AnalysisException
 import cml.data_v1 as cmldata
+from pyspark.sql import functions as F
+import pandas as pd
 
-# --- Constants for SQL Queries and Configuration ---
+# --- Constants ---
 
-# Hive is required to get a list of Iceberg tables
-HIVE_CONNECTION_NAME = "<specify_your_hive_connection_name>" 
 # Spark is used for processing the metrics for the Iceberg tables
 SPARK_CONNECTION_NAME = "<specify_your_spark_connection_name>"
 # This will be the table where the analysis data is stored. Use this table as the source table for the Streamlit app (configured in CAI Project setting - see README.md)
 RESULTS_TABLE = "<specify_your_db.tablename>"
 
-# Query to find all Iceberg tables. This will be run via the Hive cursor.
-ICEBERG_TABLES_QUERY = """
-    SELECT
-        tb.tbl_id AS tbl_id,
-        db.name AS db_name,
-        tb.tbl_name AS tbl_name,
-        split(tp.param_value, '/metadata/')[0] AS metadata_path
-    FROM sys.table_params AS tp
-    JOIN sys.tbls AS tb ON tb.tbl_id = tp.tbl_id
-    JOIN sys.dbs AS db ON db.db_id = tb.db_id
-    WHERE tp.param_key = 'metadata_location'
-      AND EXISTS (
-          SELECT 1 FROM sys.table_params
-          WHERE tbl_id = tp.tbl_id
-            AND param_key = 'table_type'
-            AND param_value = 'ICEBERG'
-      )
-"""
+
 
 RESULTS_SCHEMA = StructType([
-    StructField("tbl_id", LongType(), True),
     StructField("db_name", StringType(), True),
     StructField("table_name", StringType(), True),
     StructField("metadata_folder_count", LongType(), True),
@@ -55,13 +37,41 @@ RESULTS_SCHEMA = StructType([
 
 # --- Core Logic ---
 
-import time
-import os
-from pyspark.sql import functions as F
-from pyspark.sql.utils import AnalysisException
+
+def get_iceberg_tables(spark: SparkSession):
+
+    databases = spark.catalog.listDatabases()
+    all_tables = []
+    for db in databases:
+
+        tables = spark.catalog.listTables(f"iceberg_catalog.{db.name}")
+        for table in tables:
+
+            metadata_location = None
+            try:
+                # Use DESCRIBE EXTENDED to get top-level table info
+                desc_df = spark.sql(f"DESCRIBE EXTENDED `{db.name}`.`{table.name}`")
+
+                metadata_row = desc_df.filter(desc_df.col_name == "Location").select("data_type").first() 
+
+                if metadata_row:
+                    metadata_location = metadata_row[0]
+                    
+                  all_tables.append({
+                      'db_name': db.name,
+                      'tbl_name': table.name,
+                      'metadata_path': metadata_location  
+                  })                    
+
+            except Exception as e:
+                pass
+
+    df_pandas = pd.DataFrame(all_tables)
+    return df_pandas
 
 
-def analyze_and_insert(spark: SparkSession, conn):
+
+def analyze_and_insert(spark: SparkSession):
     """
     Finds, analyzes, and inserts stats using a robust, hybrid approach.
     It pre-validates paths on the driver before launching a single Spark job.
@@ -70,7 +80,7 @@ def analyze_and_insert(spark: SparkSession, conn):
     sc = spark.sparkContext
 
     # 1. SETUP and FETCH DATA
-    tables_to_analyze_pandas_df = conn.get_pandas_dataframe(ICEBERG_TABLES_QUERY)
+    tables_to_analyze_pandas_df = get_iceberg_tables(spark)
     table_count = len(tables_to_analyze_pandas_df)
     print(f"✅ Found {table_count} tables to analyze.")
 
@@ -84,7 +94,8 @@ def analyze_and_insert(spark: SparkSession, conn):
     Path = sc._jvm.org.apache.hadoop.fs.Path
     FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
 
-    for i, table_row in enumerate(tables_to_analyze_pandas_df.itertuples()):
+#    for i, table_row in enumerate(tables_to_analyze_pandas_df.itertuples()):
+    for i, table_row in tables_to_analyze_pandas_df.iterrows():
         base_path = table_row.metadata_path
         print(f"  [{i+1}/{table_count}] Processing: {table_row.db_name}.{table_row.tbl_name}")
 
@@ -140,7 +151,6 @@ def analyze_and_insert(spark: SparkSession, conn):
 
         # ✨ MODIFIED: Append the final stats for this table to our results list with explicit fields
         all_results.append({
-            "tbl_id": table_row.tbl_id,
             "db_name": table_row.db_name,
             "table_name": table_row.tbl_name,
             "metadata_folder_count": path_stats["metadata"][0],
@@ -175,7 +185,6 @@ def analyze_and_insert(spark: SparkSession, conn):
     print(f"💾 Writing {results_df.count()} rows to Iceberg table '{RESULTS_TABLE}' using Spark...")
 
     results_df.writeTo(RESULTS_TABLE).using("iceberg").tableProperty("write.format.default", "parquet").createOrReplace()
-
     insert_end_time = time.time()
     insert_duration = insert_end_time - insert_start_time
     print(f"--- Insert Data Phase Time: {insert_duration:.2f} seconds ---")
@@ -183,21 +192,27 @@ def analyze_and_insert(spark: SparkSession, conn):
 
 if __name__ == "__main__":
     script_start_time = time.time()
-    print("https://spark-"+os.environ["CDSW_ENGINE_ID"]+"."+os.environ["CDSW_DOMAIN"])
-    SparkContext.setSystemProperty('spark.dynamicAllocation.enabled', 'true')
-    SparkContext.setSystemProperty('spark.driver.maxResultSize', '2g')
-    SparkContext.setSystemProperty('spark.executor.cores', '8')
-    SparkContext.setSystemProperty('spark.executor.memory', '16g')
-    SparkContext.setSystemProperty('spark.dynamicAllocation.minExecutors', '1')
-    SparkContext.setSystemProperty('spark.dynamicAllocation.maxExecutors', '5')
+
+#  Use configs below if required for tuning Spark resouces - dependant on workload size  
+#    SparkContext.setSystemProperty('spark.dynamicAllocation.enabled', 'true')
+#    SparkContext.setSystemProperty('spark.driver.maxResultSize', '2g')
+#    SparkContext.setSystemProperty('spark.executor.cores', '8')
+#    SparkContext.setSystemProperty('spark.executor.memory', '16g')
+#    SparkContext.setSystemProperty('spark.dynamicAllocation.minExecutors', '1')
+#    SparkContext.setSystemProperty('spark.dynamicAllocation.maxExecutors', '5')
 
     conn = cmldata.get_connection(SPARK_CONNECTION_NAME)
     spark = conn.get_spark_session()
-    conn = None
+    
+    conf = (SparkConf()
+        .setAppName("IcebergTablesApp")
+        .set("spark.sql.catalog.iceberg_catalog", "org.apache.iceberg.spark.SparkCatalog")
+    )
+
+    spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     try:
-        conn = cmldata.get_connection(HIVE_CONNECTION_NAME)
-        analyze_and_insert(spark, conn)
+        analyze_and_insert(spark)
     except Exception as e:
         print(f"An unexpected error occurred during the main execution: {e}")
     finally:
@@ -206,6 +221,5 @@ if __name__ == "__main__":
         print(f"\n--- Total Script Execution Time: {total_duration:.2f} seconds ---")
 
         print("\n--- 📋 Full execution finished ---")
-        if conn:
-            conn.close()
+
         spark.stop()
